@@ -12,10 +12,11 @@ const Dashboard = () => {
     const [user, setUser] = useState(null);
     const [prediction, setPrediction] = useState("");
     const [possibleDiseases, setPossibleDiseases] = useState([]);
-    const [additionalSymptom, setAdditionalSymptom] = useState(null);
+    const [additionalSymptoms, setAdditionalSymptoms] = useState([]);
     const [error, setError] = useState("");
-    const [refinementCount, setRefinementCount] = useState(0); // Track iterations
-    const MAX_REFINEMENTS = 3; // Limit to 3 additional symptoms
+    const [refinementCount, setRefinementCount] = useState(0);
+    const [chatbotSuggested, setChatbotSuggested] = useState(false);
+    const MAX_REFINEMENTS = 3;
 
     useEffect(() => {
         const fetchSymptoms = async () => {
@@ -38,16 +39,17 @@ const Dashboard = () => {
         } else {
             setUser(JSON.parse(storedUser));
         }
-    }, [navigate]);
+    }, [navigate]); // Fixed typo: BUDGETnavigate -> navigate
 
     const handleChange = (selectedOptions) => {
         setSelectedSymptoms(selectedOptions || []);
         setRefinedSymptoms([]);
         setPrediction("");
         setPossibleDiseases([]);
-        setAdditionalSymptom(null);
+        setAdditionalSymptoms([]);
         setError("");
         setRefinementCount(0);
+        setChatbotSuggested(false);
     };
 
     const handlePredict = async () => {
@@ -58,9 +60,10 @@ const Dashboard = () => {
         setError("");
         setPrediction("");
         setPossibleDiseases([]);
-        setAdditionalSymptom(null);
+        setAdditionalSymptoms([]);
         setRefinedSymptoms([]);
         setRefinementCount(0);
+        setChatbotSuggested(false);
 
         try {
             const initialSymptoms = selectedSymptoms.map(s => s.value);
@@ -69,31 +72,38 @@ const Dashboard = () => {
             console.log("🟢 Initial Prediction Response:", response);
             if (response.disease) {
                 setPrediction(response.disease);
+            } else if (response.chatbot_suggested) {
+                setError(response.message);
+                setChatbotSuggested(true);
+                if (response.predicted_disease) {
+                    setPrediction(response.predicted_disease);
+                }
             } else if (response.possible_diseases) {
                 setPossibleDiseases(response.possible_diseases);
-                setAdditionalSymptom(response.ask_more_symptoms[0] || null);
+                setAdditionalSymptoms(response.ask_more_symptoms || []);
             }
         } catch (err) {
             setError("Error predicting disease. Please try again.");
+            setChatbotSuggested(true);
         }
     };
 
-    const handleRefinePrediction = async (confirmed) => {
+    const handleRefinePrediction = async (confirmed, symptom) => {
         if (refinementCount >= MAX_REFINEMENTS) {
-            // Max refinements reached, predict based on current symptoms
             const allSymptoms = [...selectedSymptoms.map(s => s.value), ...refinedSymptoms];
             const response = await predictDisease(allSymptoms);
             setPrediction(response.disease || "Unable to determine a single disease.");
             setPossibleDiseases([]);
-            setAdditionalSymptom(null);
+            setAdditionalSymptoms([]);
             setError("");
+            setChatbotSuggested(false);
             return;
         }
 
         const allSymptoms = [...selectedSymptoms.map(s => s.value), ...refinedSymptoms];
         if (confirmed) {
-            setRefinedSymptoms([...refinedSymptoms, additionalSymptom]);
-            allSymptoms.push(additionalSymptom);
+            setRefinedSymptoms([...refinedSymptoms, symptom]);
+            allSymptoms.push(symptom);
         }
 
         try {
@@ -104,21 +114,29 @@ const Dashboard = () => {
             if (response.disease) {
                 setPrediction(response.disease);
                 setPossibleDiseases([]);
-                setAdditionalSymptom(null);
+                setAdditionalSymptoms([]);
                 setError("");
+                setChatbotSuggested(false);
+            } else if (response.chatbot_suggested) {
+                setError(response.message);
+                setChatbotSuggested(true);
+                if (response.predicted_disease) {
+                    setPrediction(response.predicted_disease);
+                }
+                setPossibleDiseases([]);
+                setAdditionalSymptoms([]);
             } else if (response.possible_diseases) {
                 setPossibleDiseases(response.possible_diseases);
-                setAdditionalSymptom(response.ask_more_symptoms[0] || null);
+                setAdditionalSymptoms(response.ask_more_symptoms || []);
                 setRefinementCount(refinementCount + 1);
-                if (!response.ask_more_symptoms.length || refinementCount + 1 >= MAX_REFINEMENTS) {
-                    // No more symptoms or max reached, predict final disease
+                if (response.ask_more_symptoms.length === 0 || refinementCount + 1 >= MAX_REFINEMENTS) {
                     setPrediction(response.possible_diseases[0] || "Unable to determine a single disease.");
                     setPossibleDiseases([]);
-                    setAdditionalSymptom(null);
-                    setError("");
+                    setAdditionalSymptoms([]);
                 }
             } else {
                 setError("Unexpected response from server.");
+                setChatbotSuggested(false);
             }
         } catch (err) {
             setError("Error refining prediction. Please try again.");
@@ -137,15 +155,17 @@ const Dashboard = () => {
                             options={symptomOptions}
                             isMulti
                             onChange={handleChange}
-                            placeholder="Type to search initial symptoms..."
+                            placeholder="Type to search symptoms..."
                             value={selectedSymptoms}
                         />
+                        <br/>
+                        <h6><small>Note: If your symptom is not present in the list, Please use chatbot.</small></h6>
                         <button onClick={handlePredict} style={{ marginTop: "10px", padding: "8px 15px" }}>
                             Predict
                         </button>
                         {error && <p style={{ color: "red" }}>{error}</p>}
                         {prediction && <p><strong>Predicted Disease:</strong> {prediction}</p>}
-                        {possibleDiseases.length > 0 && (
+                        {possibleDiseases.length > 0 && refinementCount < MAX_REFINEMENTS && (
                             <div>
                                 <h3>Possible Diseases:</h3>
                                 <ul>
@@ -156,25 +176,34 @@ const Dashboard = () => {
                                 {refinedSymptoms.length > 0 && (
                                     <p><strong>Confirmed Symptoms:</strong> {refinedSymptoms.join(", ")}</p>
                                 )}
-                                {additionalSymptom && refinementCount < MAX_REFINEMENTS ? (
+                                {additionalSymptoms.length > 0 && (
                                     <div>
-                                        <h4>Do you have this symptom? ({refinementCount + 1}/{MAX_REFINEMENTS})</h4>
-                                        <p>{additionalSymptom}</p>
-                                        <button
-                                            onClick={() => handleRefinePrediction(true)}
-                                            style={{ margin: "5px", padding: "5px 10px" }}
-                                        >
-                                            Yes
-                                        </button>
-                                        <button
-                                            onClick={() => handleRefinePrediction(false)}
-                                            style={{ margin: "5px", padding: "5px 10px" }}
-                                        >
-                                            No
-                                        </button>
+                                        <h4>Do you have any of these symptoms? ({refinementCount + 1}/{MAX_REFINEMENTS})</h4>
+                                        {additionalSymptoms.map((symptom, index) => (
+                                            <div key={index}>
+                                                <p>{symptom}</p>
+                                                <button
+                                                    onClick={() => handleRefinePrediction(true, symptom)}
+                                                    style={{ margin: "5px", padding: "5px 10px" }}
+                                                >
+                                                    Yes
+                                                </button>
+                                                <button
+                                                    onClick={() => handleRefinePrediction(false, symptom)}
+                                                    style={{ margin: "5px", padding: "5px 10px" }}
+                                                >
+                                                    No
+                                                </button>
+                                            </div>
+                                        ))}
                                     </div>
-                                ) : null}
+                                )}
                             </div>
+                        )}
+                        {chatbotSuggested && (
+                            <p>
+                                <strong>Suggestion:</strong> Please use the chatbot for further assistance.
+                            </p>
                         )}
                     </div>
                 </>

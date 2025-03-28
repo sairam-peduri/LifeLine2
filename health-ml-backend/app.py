@@ -4,6 +4,7 @@ import numpy as np
 from flask_cors import CORS
 from scipy import stats
 import pandas as pd
+import random
 
 app = Flask(__name__)
 CORS(app)
@@ -43,8 +44,13 @@ def predict():
 
         all_symptoms = list(set(user_symptoms + additional_symptoms))
         filtered_symptoms = [symptom for symptom in all_symptoms if symptom in valid_symptoms]
+
+        # Condition 3: No valid symptoms provided
         if not filtered_symptoms:
-            return jsonify({"error": "No valid symptoms provided."}), 400
+            return jsonify({
+                "message": "None of the provided symptoms match known symptoms. Please consult the chatbot for help.",
+                "chatbot_suggested": True
+            }), 400
 
         # Predict using ML models
         symptoms_dict = {symptom: 1 if symptom in filtered_symptoms else 0 for symptom in valid_symptoms}
@@ -64,25 +70,45 @@ def predict():
         ]
         print(f"Filtered possible diseases: {possible_diseases}")
 
+        # Condition 2: No disease matches all symptoms
         if not possible_diseases:
-            # If no exact match, return the ML prediction as a fallback
-            return jsonify({'disease': disease_name})
+            return jsonify({
+                "message": "No disease matches all provided symptoms. Please consult the chatbot for help.",
+                "chatbot_suggested": True,
+                "predicted_disease": disease_name  # ML fallback for reference
+            })
 
         if len(possible_diseases) == 1:
             return jsonify({'disease': possible_diseases[0]})
 
-        # Find distinguishing symptoms for the remaining possible diseases
+        # Condition 1: Two or more symptoms, ask up to 3 random symptoms
+        if len(filtered_symptoms) >= 2:
+            distinguishing_symptoms = set()
+            for disease in possible_diseases:
+                distinguishing_symptoms.update(disease_symptom_map[disease])
+            distinguishing_symptoms.difference_update(filtered_symptoms)
+
+            if distinguishing_symptoms:
+                # Pick up to 3 random symptoms
+                ask_symptoms = random.sample(
+                    list(distinguishing_symptoms),
+                    min(3, len(distinguishing_symptoms))
+                )
+                return jsonify({
+                    "possible_diseases": possible_diseases,
+                    "ask_more_symptoms": ask_symptoms
+                })
+
+        # Default case: One symptom or no refinement needed
         distinguishing_symptoms = set()
         for disease in possible_diseases:
             distinguishing_symptoms.update(disease_symptom_map[disease])
         distinguishing_symptoms.difference_update(filtered_symptoms)
 
         if not distinguishing_symptoms:
-            # No more symptoms to distinguish, return the ML prediction
             return jsonify({'disease': disease_name})
 
-        # Select one distinguishing symptom
-        one_symptom = list(distinguishing_symptoms)[0]
+        one_symptom = random.choice(list(distinguishing_symptoms))
         return jsonify({
             "possible_diseases": possible_diseases,
             "ask_more_symptoms": [one_symptom]
