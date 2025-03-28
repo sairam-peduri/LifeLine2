@@ -1,25 +1,25 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Select from "react-select"; // Import react-select
-import { getSymptoms, predictDisease } from "../api/api"; // Ensure correct API import
+import Select from "react-select";
+import { getSymptoms, predictDisease } from "../api/api";
 import Navbar from "../components/Navbar";
 
 const Dashboard = () => {
     const navigate = useNavigate();
     const [symptomOptions, setSymptomOptions] = useState([]);
     const [selectedSymptoms, setSelectedSymptoms] = useState([]);
+    const [refinedSymptoms, setRefinedSymptoms] = useState([]);
     const [user, setUser] = useState(null);
     const [prediction, setPrediction] = useState("");
     const [possibleDiseases, setPossibleDiseases] = useState([]);
-    const [additionalSymptoms, setAdditionalSymptoms] = useState([]);
+    const [additionalSymptom, setAdditionalSymptom] = useState(null);
     const [error, setError] = useState("");
 
-    // Fetch symptoms from Flask when the component loads
     useEffect(() => {
         const fetchSymptoms = async () => {
             try {
-                const symptoms = await getSymptoms(); // Fetch symptoms dynamically
-                console.log("Symptoms received:", symptoms); // Debugging
+                const symptoms = await getSymptoms();
+                console.log("Symptoms received:", symptoms);
                 setSymptomOptions(symptoms);
             } catch (err) {
                 setError("Failed to load symptoms.");
@@ -28,23 +28,25 @@ const Dashboard = () => {
         fetchSymptoms();
     }, []);
 
-    // Fetch user details from localStorage
     useEffect(() => {
         const storedUser = localStorage.getItem("user");
         if (!storedUser) {
             alert("Please log in first!");
-            navigate("/login"); // Redirect if no user is found
+            navigate("/login");
         } else {
             setUser(JSON.parse(storedUser));
         }
     }, [navigate]);
 
-    // Handle symptom selection
     const handleChange = (selectedOptions) => {
         setSelectedSymptoms(selectedOptions || []);
+        setRefinedSymptoms([]);
+        setPrediction("");
+        setPossibleDiseases([]);
+        setAdditionalSymptom(null);
+        setError("");
     };
 
-    // Send symptoms to backend for prediction
     const handlePredict = async () => {
         if (selectedSymptoms.length === 0) {
             setError("Please select at least one symptom.");
@@ -53,30 +55,53 @@ const Dashboard = () => {
         setError("");
         setPrediction("");
         setPossibleDiseases([]);
-        setAdditionalSymptoms([]);
+        setAdditionalSymptom(null);
+        setRefinedSymptoms([]);
 
         try {
-            const response = await predictDisease(selectedSymptoms.map(s => s.value));
-            if (response.possible_diseases) {
-                setPossibleDiseases(response.possible_diseases);
-                setAdditionalSymptoms(response.ask_more_symptoms);
-            } else {
+            const initialSymptoms = selectedSymptoms.map(s => s.value);
+            console.log("🟡 Initial Symptoms:", initialSymptoms);
+            const response = await predictDisease(initialSymptoms);
+            console.log("🟢 Initial Prediction Response:", response);
+            if (response.disease) {
                 setPrediction(response.disease);
+            } else if (response.possible_diseases) {
+                setPossibleDiseases(response.possible_diseases);
+                setAdditionalSymptom(response.ask_more_symptoms[0] || null);
             }
         } catch (err) {
             setError("Error predicting disease. Please try again.");
         }
     };
 
-    const handleRefinePrediction = async (selectedAdditionalSymptoms) => {
-        const refinedSymptoms = [...selectedSymptoms.map(s => s.value), ...selectedAdditionalSymptoms];
-        setSelectedSymptoms([...selectedSymptoms, ...selectedAdditionalSymptoms.map(symptom => ({ value: symptom, label: symptom }))]);
+    const handleRefinePrediction = async (confirmed) => {
+        const allSymptoms = [...selectedSymptoms.map(s => s.value), ...refinedSymptoms];
+        if (confirmed) {
+            setRefinedSymptoms([...refinedSymptoms, additionalSymptom]);
+            allSymptoms.push(additionalSymptom);
+        }
 
         try {
-            const response = await predictDisease(refinedSymptoms);
-            setPrediction(response.disease);
-            setPossibleDiseases([]);
-            setAdditionalSymptoms([]);
+            console.log("🟡 Combined Symptoms for Refinement:", allSymptoms);
+            const response = await predictDisease(allSymptoms);
+            console.log("🟢 Refined Prediction Response:", response);
+
+            if (response.disease) {
+                setPrediction(response.disease);
+                setPossibleDiseases([]);
+                setAdditionalSymptom(null);
+                setError("");
+            } else if (response.possible_diseases) {
+                setPossibleDiseases(response.possible_diseases);
+                setAdditionalSymptom(response.ask_more_symptoms[0] || null);
+                if (!response.ask_more_symptoms.length) {
+                    setError("No more symptoms to refine. Multiple diseases remain.");
+                } else {
+                    setError("");
+                }
+            } else {
+                setError("Unexpected response from server.");
+            }
         } catch (err) {
             setError("Error refining prediction. Please try again.");
         }
@@ -90,26 +115,51 @@ const Dashboard = () => {
                     <h2>Welcome to the Dashboard, {user.name}!</h2>
                     <div style={{ textAlign: "center", padding: "20px" }}>
                         <h2>Health Prediction Dashboard</h2>
-                        {/* Autocomplete dropdown */}
                         <Select
                             options={symptomOptions}
                             isMulti
                             onChange={handleChange}
-                            placeholder="Type to search symptoms..."
+                            placeholder="Type to search initial symptoms..."
+                            value={selectedSymptoms}
                         />
-
                         <button onClick={handlePredict} style={{ marginTop: "10px", padding: "8px 15px" }}>
                             Predict
                         </button>
-
                         {error && <p style={{ color: "red" }}>{error}</p>}
                         {prediction && <p><strong>Predicted Disease:</strong> {prediction}</p>}
                         {possibleDiseases.length > 0 && (
-                        <div>
-                            <h3>Multiple diseases detected. Can you confirm if you have these symptoms?</h3>
-                            <Select options={additionalSymptoms.map(s => ({ value: s, label: s }))} isMulti onChange={(selected) => handleRefinePrediction(selected.map(s => s.value))} placeholder="Select additional symptoms..." />
-                        </div>
-                    )}
+                            <div>
+                                <h3>Possible Diseases:</h3>
+                                <ul>
+                                    {possibleDiseases.map((disease, index) => ( // Fixed typo here
+                                        <li key={index}>{disease}</li>
+                                    ))}
+                                </ul>
+                                {refinedSymptoms.length > 0 && (
+                                    <p><strong>Confirmed Symptoms:</strong> {refinedSymptoms.join(", ")}</p>
+                                )}
+                                {additionalSymptom ? (
+                                    <div>
+                                        <h4>Do you have this symptom?</h4>
+                                        <p>{additionalSymptom}</p>
+                                        <button
+                                            onClick={() => handleRefinePrediction(true)}
+                                            style={{ margin: "5px", padding: "5px 10px" }}
+                                        >
+                                            Yes
+                                        </button>
+                                        <button
+                                            onClick={() => handleRefinePrediction(false)}
+                                            style={{ margin: "5px", padding: "5px 10px" }}
+                                        >
+                                            No
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <p>No further symptoms to refine.</p>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </>
             ) : (

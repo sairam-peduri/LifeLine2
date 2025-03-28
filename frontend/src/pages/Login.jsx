@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import API from "../api/api";
+import { login } from "../api/api";
 import './signlogin.css';
 
 const Login = () => {
@@ -13,13 +13,13 @@ const Login = () => {
         e.preventDefault();
         setError("");
         try {
-            const res = await API.post("/auth/login", credentials);
-            localStorage.setItem("token", res.data.token);
-            localStorage.setItem("user", JSON.stringify(res.data.user)); // Store user data
+            const res = await login(credentials);
+            localStorage.setItem("token", res.token);
+            localStorage.setItem("user", JSON.stringify(res.user)); // Store user data
             //alert("Login successful");
             navigate("/dashboard");
         } catch (err) {
-            alert(err.response?.data?.error || "Login failed! Please try again.");
+            alert(err|| "Login failed! Please try again.");
         }
     };
 

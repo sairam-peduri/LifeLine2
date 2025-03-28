@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import API from "../api/api";
+import { signup } from "../api/api";
 import './signlogin.css';
 
 const Signup = () => {
@@ -9,10 +9,10 @@ const Signup = () => {
     const handleSignup = async (e) => {
         e.preventDefault();
         try {
-            const res = await API.post("/auth/signup", user);
-            alert(res.data.message);
+            const res = await signup(user);
+            alert(res.message);
         } catch (err) {
-            alert(err.response.data.error);
+            alert(err || "Signup failed! Please try again.");
         }
     };
 

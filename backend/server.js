@@ -22,8 +22,8 @@ app.get("/", (req, res) => {
 
 app.get("/api/get_symptoms", async (req, res) => {
     try {
-        const flaskResponse = await axios.get("http://127.0.0.1:5000/api/get_symptoms");
-        res.json({ symptoms: flaskResponse.data.symptoms });
+        const flaskResponse = await axios.get("http://127.0.0.1:5001/api/get_symptoms");
+        res.json(flaskResponse.data);
     } catch (error) {
         console.error("❌ Error fetching symptoms from Flask:", error);
         res.status(500).json({ message: "Error fetching symptoms" });
@@ -40,10 +40,10 @@ app.post("/api/predict", async (req, res) => {
     }
 
     // Send request to Flask API
-    const flaskResponse = await axios.post("http://127.0.0.1:5000/api/predict", { symptoms });
+    const flaskResponse = await axios.post("http://127.0.0.1:5001/api/predict", { symptoms });
 
     // Send prediction response to frontend
-    res.json({ disease: flaskResponse.data.disease });
+    res.json(flaskResponse.data);
 
 } catch (error) {
     console.error("❌ Error communicating with Flask:", error);
