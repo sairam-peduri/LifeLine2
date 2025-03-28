@@ -14,6 +14,8 @@ const Dashboard = () => {
     const [possibleDiseases, setPossibleDiseases] = useState([]);
     const [additionalSymptom, setAdditionalSymptom] = useState(null);
     const [error, setError] = useState("");
+    const [refinementCount, setRefinementCount] = useState(0); // Track iterations
+    const MAX_REFINEMENTS = 3; // Limit to 3 additional symptoms
 
     useEffect(() => {
         const fetchSymptoms = async () => {
@@ -45,6 +47,7 @@ const Dashboard = () => {
         setPossibleDiseases([]);
         setAdditionalSymptom(null);
         setError("");
+        setRefinementCount(0);
     };
 
     const handlePredict = async () => {
@@ -57,6 +60,7 @@ const Dashboard = () => {
         setPossibleDiseases([]);
         setAdditionalSymptom(null);
         setRefinedSymptoms([]);
+        setRefinementCount(0);
 
         try {
             const initialSymptoms = selectedSymptoms.map(s => s.value);
@@ -75,6 +79,17 @@ const Dashboard = () => {
     };
 
     const handleRefinePrediction = async (confirmed) => {
+        if (refinementCount >= MAX_REFINEMENTS) {
+            // Max refinements reached, predict based on current symptoms
+            const allSymptoms = [...selectedSymptoms.map(s => s.value), ...refinedSymptoms];
+            const response = await predictDisease(allSymptoms);
+            setPrediction(response.disease || "Unable to determine a single disease.");
+            setPossibleDiseases([]);
+            setAdditionalSymptom(null);
+            setError("");
+            return;
+        }
+
         const allSymptoms = [...selectedSymptoms.map(s => s.value), ...refinedSymptoms];
         if (confirmed) {
             setRefinedSymptoms([...refinedSymptoms, additionalSymptom]);
@@ -94,9 +109,12 @@ const Dashboard = () => {
             } else if (response.possible_diseases) {
                 setPossibleDiseases(response.possible_diseases);
                 setAdditionalSymptom(response.ask_more_symptoms[0] || null);
-                if (!response.ask_more_symptoms.length) {
-                    setError("No more symptoms to refine. Multiple diseases remain.");
-                } else {
+                setRefinementCount(refinementCount + 1);
+                if (!response.ask_more_symptoms.length || refinementCount + 1 >= MAX_REFINEMENTS) {
+                    // No more symptoms or max reached, predict final disease
+                    setPrediction(response.possible_diseases[0] || "Unable to determine a single disease.");
+                    setPossibleDiseases([]);
+                    setAdditionalSymptom(null);
                     setError("");
                 }
             } else {
@@ -131,16 +149,16 @@ const Dashboard = () => {
                             <div>
                                 <h3>Possible Diseases:</h3>
                                 <ul>
-                                    {possibleDiseases.map((disease, index) => ( // Fixed typo here
+                                    {possibleDiseases.map((disease, index) => (
                                         <li key={index}>{disease}</li>
                                     ))}
                                 </ul>
                                 {refinedSymptoms.length > 0 && (
                                     <p><strong>Confirmed Symptoms:</strong> {refinedSymptoms.join(", ")}</p>
                                 )}
-                                {additionalSymptom ? (
+                                {additionalSymptom && refinementCount < MAX_REFINEMENTS ? (
                                     <div>
-                                        <h4>Do you have this symptom?</h4>
+                                        <h4>Do you have this symptom? ({refinementCount + 1}/{MAX_REFINEMENTS})</h4>
                                         <p>{additionalSymptom}</p>
                                         <button
                                             onClick={() => handleRefinePrediction(true)}
@@ -155,9 +173,7 @@ const Dashboard = () => {
                                             No
                                         </button>
                                     </div>
-                                ) : (
-                                    <p>No further symptoms to refine.</p>
-                                )}
+                                ) : null}
                             </div>
                         )}
                     </div>
