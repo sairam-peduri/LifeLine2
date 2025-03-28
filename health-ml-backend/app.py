@@ -75,31 +75,13 @@ def predict():
             return jsonify({
                 "message": "No disease matches all provided symptoms. Please consult the chatbot for help.",
                 "chatbot_suggested": True,
-                "predicted_disease": disease_name  # ML fallback for reference
+                "predicted_disease": disease_name
             })
 
         if len(possible_diseases) == 1:
             return jsonify({'disease': possible_diseases[0]})
 
-        # Condition 1: Two or more symptoms, ask up to 3 random symptoms
-        if len(filtered_symptoms) >= 2:
-            distinguishing_symptoms = set()
-            for disease in possible_diseases:
-                distinguishing_symptoms.update(disease_symptom_map[disease])
-            distinguishing_symptoms.difference_update(filtered_symptoms)
-
-            if distinguishing_symptoms:
-                # Pick up to 3 random symptoms
-                ask_symptoms = random.sample(
-                    list(distinguishing_symptoms),
-                    min(3, len(distinguishing_symptoms))
-                )
-                return jsonify({
-                    "possible_diseases": possible_diseases,
-                    "ask_more_symptoms": ask_symptoms
-                })
-
-        # Default case: One symptom or no refinement needed
+        # Find distinguishing symptoms (same for 1 or 2+ symptoms)
         distinguishing_symptoms = set()
         for disease in possible_diseases:
             distinguishing_symptoms.update(disease_symptom_map[disease])
@@ -108,6 +90,7 @@ def predict():
         if not distinguishing_symptoms:
             return jsonify({'disease': disease_name})
 
+        # Always return one random symptom, regardless of symptom count
         one_symptom = random.choice(list(distinguishing_symptoms))
         return jsonify({
             "possible_diseases": possible_diseases,
