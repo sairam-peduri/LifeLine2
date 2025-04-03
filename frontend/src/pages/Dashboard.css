@@ -1,0 +1,126 @@
+.dashboard-container {
+    text-align: center;
+    padding: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: #f0f2f5; /* Light gray background */
+    color: #333; /* Dark text for contrast */
+}
+
+.predict-button {
+    margin-top: 10px;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.predict-button:hover {
+    background-color: #0056b3;
+}
+
+.error {
+    color: #dc3545; /* Red for errors */
+    margin-top: 10px;
+}
+
+.prediction-container {
+    margin-top: 20px;
+    text-align: left;
+}
+
+.prediction-header {
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    color: #212529; /* Dark gray text */
+}
+
+.prediction-header:hover {
+    background-color: #e9ecef;
+}
+
+.dropdown-arrow {
+    font-size: 12px;
+    transition: transform 0.3s ease;
+    color: #007bff; /* Blue arrow */
+}
+
+.dropdown-arrow.open {
+    transform: rotate(180deg);
+}
+
+.details-dropdown {
+    margin-top: 10px;
+    padding: 15px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    animation: slideIn 0.3s ease-out;
+    color: #343a40; /* Darker text for contrast */
+}
+
+.details-dropdown p {
+    margin: 10px 0;
+    line-height: 1.5;
+}
+
+.refinement-container {
+    margin-top: 20px;
+    color: #333; /* Dark text */
+}
+
+.symptom-prompt {
+    margin-top: 15px;
+}
+
+.yes-button, .no-button {
+    padding: 8px 15px;
+    margin: 5px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    color: white; /* White text for buttons */
+}
+
+.yes-button {
+    background-color: #28a745;
+}
+
+.yes-button:hover {
+    background-color: #218838;
+}
+
+.no-button {
+    background-color: #dc3545;
+}
+
+.no-button:hover {
+    background-color: #c82333;
+}
+
+.chatbot-suggestion {
+    margin-top: 15px;
+    color: #6c757d; /* Gray for suggestion */
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

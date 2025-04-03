@@ -1,12 +1,14 @@
 import axios from "axios";
 
-const API = axios.create({
-    baseURL: "http://localhost:5000/api", // ✅ Base URL set correctly
-});
+const PREDICTION_BASE_URL = "http://localhost:5001/api";
+const AUTH_BASE_URL = "http://localhost:5000/api";
+
+const PredictionAPI = axios.create({ baseURL: PREDICTION_BASE_URL });
+const AuthAPI = axios.create({ baseURL: AUTH_BASE_URL });
 
 export const login = async (credentials) => {
     try {
-        const response = await API.post("/auth/login", credentials);
+        const response = await AuthAPI.post("/auth/login", credentials);
         return response.data;
     } catch (error) {
         console.error("❌ Error during login:", error);
@@ -16,7 +18,7 @@ export const login = async (credentials) => {
 
 export const signup = async (userData) => {
     try {
-        const response = await API.post("/auth/signup", userData);
+        const response = await AuthAPI.post("/auth/signup", userData);
         return response.data;
     } catch (error) {
         console.error("❌ Error during signup:", error);
@@ -26,57 +28,40 @@ export const signup = async (userData) => {
 
 export const getSymptoms = async () => {
     try {
-        const response = await API.get("/get_symptoms"); // ✅ Matches Flask
-        console.log("Fetched Symptoms:", response.data.symptoms);
-        return response.data.symptoms.map(symptom => ({
-            value: symptom,
-            label: symptom.replace(/_/g, " ") // Format for display
-        }));
-    } catch (error) {
-        console.error("❌ Error fetching symptoms:", error);
-        throw error;
+        console.log("Fetching symptoms from:", `${PREDICTION_BASE_URL}/get_symptoms`);
+        const response = await PredictionAPI.get("/get_symptoms");
+        console.log("Symptoms response:", response.data);
+        return response.data.symptoms.map(symptom => ({ value: symptom, label: symptom }));
+    } catch (err) {
+        console.error("Error in getSymptoms:", err);
+        throw err.response?.data?.error || "Failed to fetch symptoms";
     }
 };
 
-// ✅ First API call to predict disease
-export const predictDisease = async (selectedSymptoms) => {
+export const predictDisease = async ({ symptoms, additional_symptoms = [], refinement_count = 0 }) => {
     try {
-        console.log("sending symptoms:", selectedSymptoms);
-        const response = await API.post("/predict", 
-            { symptoms: selectedSymptoms },
-            { headers: { 'Content-Type': 'application/json' } }
-        );
-        console.log("Prediction Response (Raw):", JSON.stringify(response.data, null, 2)); // Log full response
-        if (!response.data) {
-            throw new Error("No response data from server");
-        }
-        // Accept any response with either 'disease' or 'possible_diseases'
-        if (!response.data.disease && !response.data.possible_diseases) {
-            throw new Error("Response missing required fields");
-        }
+        const payload = { symptoms, additional_symptoms, refinement_count };
+        console.log("Sending payload to predict:", JSON.stringify(payload, null, 2));
+        console.log("Fetching prediction from:", `${PREDICTION_BASE_URL}/predict`);
+        const startTime = performance.now();
+        const response = await PredictionAPI.post("/predict", payload);
+        console.log(`Prediction took ${(performance.now() - startTime) / 1000} seconds`);
+        console.log("Prediction response:", JSON.stringify(response.data, null, 2));
         return response.data;
-    } catch (error) {
-        console.error("❌ Error predicting disease:", error);
-        console.error("❌ Server Response:", error.response?.data); 
-        throw error.response?.data?.error || "Error predicting disease";
+    } catch (err) {
+        console.error("Error in predictDisease:", err);
+        throw err.response?.data?.error || "Prediction failed";
     }
 };
 
-// ✅ Second API call to refine prediction with extra symptoms
-export const refinePrediction = async (selectedSymptoms, extraSymptoms) => {
+export const getDiseaseDetails = async (disease, symptoms) => {
     try {
-        const response = await API.post("/predict", {
-                symptoms: selectedSymptoms,  // Send original symptoms 
-                additional_symptoms: extraSymptoms  // Send new symptoms
-        });
-        console.log("Refined Prediction Response:", response.data);
-
-        return response.data; // ✅ Return response instead of setting state
-    } catch (error) {
-        console.error("Error refining prediction:", error);
-        throw error.response?.data?.error || "Error refining prediction";
+        console.log("Fetching details for:", disease);
+        const response = await PredictionAPI.post("/details", { disease, symptoms });
+        console.log("Details response:", JSON.stringify(response.data, null, 2));
+        return response.data;
+    } catch (err) {
+        console.error("Error in getDiseaseDetails:", err);
+        throw err.response?.data?.error || "Failed to fetch details";
     }
 };
-
-
-export default API;
