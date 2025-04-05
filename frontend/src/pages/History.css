@@ -1,0 +1,35 @@
+*{
+    color:black;
+}
+
+.history-container {
+    margin: 20px auto;
+    max-width: 800px;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+.history-container h2, .history-container h3 {
+    color: #333;
+}
+
+.history-container ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.history-container li {
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.history-container li:last-child {
+    border-bottom: none;
+}
+
+.error {
+    color: red;
+    margin-bottom: 10px;
+}

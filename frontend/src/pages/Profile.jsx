@@ -1,5 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import Navbar from "../components/Navbar";
 import "./profile.css";
 
 const Profile = () => {
@@ -16,6 +17,8 @@ const Profile = () => {
     <div className="profile-container">
       <h2>User Profile</h2>
       {user ? (
+        <>
+        <Navbar user={user} />
         <div>
           <p><strong>Name:</strong> {user.name}</p>
           <p><strong>Gender:</strong> {user.gender}</p>
@@ -23,6 +26,7 @@ const Profile = () => {
           <p><strong>Email:</strong> {user.email}</p>
           <button onClick={handleLogout}>Logout</button>
         </div>
+        </>
       ) : (
         <p>No user data found</p>
       )}

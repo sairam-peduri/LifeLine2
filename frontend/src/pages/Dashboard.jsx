@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Select from "react-select";
-import { getDiseaseDetails, getSymptoms, predictDisease } from "../api/api";
+import { getDiseaseDetails, getPredictionHistory, getSymptoms, predictDisease } from "../api/api";
 import Navbar from "../components/Navbar";
 import "./Dashboard.css";
 
@@ -19,21 +19,31 @@ const Dashboard = () => {
     const [error, setError] = useState("");
     const [refinementCount, setRefinementCount] = useState(0);
     const [chatbotSuggested, setChatbotSuggested] = useState(false);
+    const [predictionHistory, setPredictionHistory] = useState([]);
     const MAX_REFINEMENTS = 3;
+    const MAX_HISTORY = 10;
 
     useEffect(() => {
-        const fetchSymptoms = async () => {
+        const fetchSymptomsAndHistory = async () => {
             try {
                 console.log("Fetching symptoms...");
                 const symptoms = await getSymptoms();
                 console.log("Symptoms loaded:", symptoms);
                 setSymptomOptions(symptoms);
+
+                const storedUser = localStorage.getItem("user");
+                if (storedUser) {
+                    const parsedUser = JSON.parse(storedUser);
+                    setUser(parsedUser);
+                    const history = await getPredictionHistory(parsedUser.name);
+                    setPredictionHistory(history.reverse()); // Newest first
+                }
             } catch (err) {
-                console.error("Failed to fetch symptoms:", err);
-                setError(`Failed to load symptoms: ${err.message}`);
+                console.error("Failed to fetch data:", err);
+                setError(`Failed to load data: ${err.message}`);
             }
         };
-        fetchSymptoms();
+        fetchSymptomsAndHistory();
     }, []);
 
     useEffect(() => {
@@ -41,7 +51,7 @@ const Dashboard = () => {
         if (!storedUser) {
             alert("Please log in first!");
             navigate("/login");
-        } else {
+        }else{
             setUser(JSON.parse(storedUser));
         }
     }, [navigate]);
@@ -95,7 +105,8 @@ const Dashboard = () => {
             const payload = {
                 symptoms: initialSymptoms,
                 additional_symptoms: [],
-                refinement_count: 0
+                refinement_count: 0,
+                username: user.name
             };
             console.log("Sending initial payload:", JSON.stringify(payload, null, 2));
             const response = await predictDisease(payload);
@@ -103,13 +114,15 @@ const Dashboard = () => {
             if (response.disease) {
                 setPrediction(response.disease);
                 fetchDetails(response.disease, initialSymptoms);
+                const history = await getPredictionHistory(user.name);
+                setPredictionHistory(history.reverse());
             } else if (response.chatbot_suggested) {
                 setError(response.message);
                 setChatbotSuggested(true);
             } else if (response.possible_diseases && response.ask_more_symptoms) {
                 setPossibleDiseases(response.possible_diseases);
                 setAdditionalSymptom(response.ask_more_symptoms[0]);
-                setRefinementCount(0); // Explicitly set to 0 for first prompt
+                setRefinementCount(0);
             } else {
                 setError("Unexpected initial response from server");
             }
@@ -135,7 +148,8 @@ const Dashboard = () => {
             const payload = {
                 symptoms: selectedSymptoms.map(s => s.value),
                 additional_symptoms: currentRefined,
-                refinement_count: newRefinementCount
+                refinement_count: newRefinementCount,
+                username: user.name
             };
             console.log("Sending refinement payload:", JSON.stringify(payload, null, 2));
             const response = await predictDisease(payload);
@@ -144,6 +158,8 @@ const Dashboard = () => {
             if (response.disease) {
                 setPrediction(response.disease);
                 fetchDetails(response.disease, allSymptoms);
+                const history = await getPredictionHistory(user.name);
+                setPredictionHistory(history.reverse());
                 setPossibleDiseases([]);
                 setAdditionalSymptom(null);
                 setRefinementCount(0);
@@ -158,13 +174,11 @@ const Dashboard = () => {
                 setAdditionalSymptom(response.ask_more_symptoms[0]);
                 setRefinementCount(newRefinementCount);
             } else if (newRefinementCount >= MAX_REFINEMENTS) {
-                // Backend should have returned a disease; if not, log but proceed with last known prediction
                 console.error("Expected a single disease from backend after 3 refinements:", response);
                 setError(""); // No error displayed to user
                 setPossibleDiseases([]);
                 setAdditionalSymptom(null);
                 setRefinementCount(0);
-                // Rely on backend to provide disease; if it fails, it’s a backend issue
             } else {
                 console.error("Unexpected response during refinement:", response);
                 setError("Unexpected response from server");
@@ -206,25 +220,31 @@ const Dashboard = () => {
                                 </div>
                                 {details && isDetailsOpen ? (
                                     <div className="details-dropdown">
-                                        <p><strong>Description:</strong> {details.description}</p>
-                                        <p><strong>Causes:</strong></p>
-                                        <ul>
-                                            {details.causes.map((cause, index) => (
-                                                <li key={index}>{cause}</li>
-                                            ))}
-                                        </ul>
-                                        <p><strong>Precautions/Suggestions:</strong></p>
-                                        <ul>
-                                            {details.precautions.map((precaution, index) => (
-                                                <li key={index}>{precaution}</li>
-                                            ))}
-                                        </ul>
-                                        <p><strong>Medicines:</strong></p>
-                                        <ul>
-                                            {details.medicines.map((medicine, index) => (
-                                                <li key={index}>{medicine}</li>
-                                            ))}
-                                        </ul>
+                                        <p className="description"><strong>About {prediction}:</strong> {details.description}</p>
+                                        <div className="details-section">
+                                            <h4><strong>Causes</strong></h4>
+                                            <ul>
+                                                {details.causes.map((cause, index) => (
+                                                    <li key={index}>{cause}</li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                        <div className="details-section">
+                                            <h4><strong>Precautions/Suggestions</strong></h4>
+                                            <ul>
+                                                {details.precautions.map((precaution, index) => (
+                                                    <li key={index}>{precaution}</li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                        <div className="details-section">
+                                            <h4><strong>Medicines</strong></h4>
+                                            <ul>
+                                                {details.medicines.map((medicine, index) => (
+                                                    <li key={index}>{medicine}</li>
+                                                ))}
+                                            </ul>
+                                        </div>
                                     </div>
                                 ) : isDetailsOpen && (
                                     <div className="details-dropdown">
@@ -261,6 +281,18 @@ const Dashboard = () => {
                                 <strong>Suggestion:</strong> Please use the chatbot for further assistance.
                             </p>
                         )}
+                        {/* {predictionHistory.length > 0 && (
+                            <div className="history-container">
+                                <h3>Prediction History (Last {MAX_HISTORY})</h3>
+                                <ul>
+                                    {predictionHistory.map((entry, index) => (
+                                        <li key={index}>
+                                            <strong>{entry.disease}</strong> - Symptoms: {entry.symptoms.join(", ")} (Predicted on: {new Date(entry.timestamp).toLocaleString()})
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )} */}
                     </div>
                 </>
             ) : (
@@ -270,4 +302,4 @@ const Dashboard = () => {
     );
 };
 
-export default Dashboard; 
+export default Dashboard;

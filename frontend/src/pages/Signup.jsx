@@ -11,6 +11,7 @@ const Signup = () => {
         try {
             const res = await signup(user);
             alert(res.message);
+            navigate("/login");
         } catch (err) {
             alert(err || "Signup failed! Please try again.");
         }

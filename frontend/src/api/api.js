@@ -38,9 +38,9 @@ export const getSymptoms = async () => {
     }
 };
 
-export const predictDisease = async ({ symptoms, additional_symptoms = [], refinement_count = 0 }) => {
+export const predictDisease = async ({ symptoms, additional_symptoms = [], refinement_count = 0, username }) => {
     try {
-        const payload = { symptoms, additional_symptoms, refinement_count };
+        const payload = { symptoms, additional_symptoms, refinement_count, username };
         console.log("Sending payload to predict:", JSON.stringify(payload, null, 2));
         console.log("Fetching prediction from:", `${PREDICTION_BASE_URL}/predict`);
         const startTime = performance.now();
@@ -63,5 +63,17 @@ export const getDiseaseDetails = async (disease, symptoms) => {
     } catch (err) {
         console.error("Error in getDiseaseDetails:", err);
         throw err.response?.data?.error || "Failed to fetch details";
+    }
+};
+
+export const getPredictionHistory = async (username) => {
+    try {
+        console.log("Fetching history for:", username);
+        const response = await PredictionAPI.get("/history", { params: { username } });
+        console.log("History response:", JSON.stringify(response.data, null, 2));
+        return response.data.history;
+    } catch (err) {
+        console.error("Error in getPredictionHistory:", err);
+        throw err.response?.data?.error || "Failed to fetch history";
     }
 };

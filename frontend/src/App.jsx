@@ -1,6 +1,7 @@
 import { Navigate, Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import "./App.css";
 import Dashboard from "./pages/Dashboard";
+import History from "./pages/History";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
@@ -23,6 +24,8 @@ const App = () => {
                 {/* Protected Routes (Only accessible if authenticated) */}
                 <Route path="/dashboard" element={isAuthenticated() ? <Dashboard /> : <Navigate to="/login" />} />
                 <Route path="/profile" element={isAuthenticated() ? <Profile /> : <Navigate to="/login" />} />
+                <Route path="/history" element={isAuthenticated() ? <History /> : <Navigate to="/login"/>} />
+
             </Routes>
         </Router>
     );
