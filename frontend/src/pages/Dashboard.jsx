@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Select from "react-select";
-import { getDiseaseDetails, getPredictionHistory, getSymptoms, predictDisease } from "../api/api";
+import { chatWithBot, getDiseaseDetails, getPredictionHistory, getSymptoms, predictDisease } from "../api/api";
 import Navbar from "../components/Navbar";
 import "./Dashboard.css";
 
@@ -20,6 +20,10 @@ const Dashboard = () => {
     const [refinementCount, setRefinementCount] = useState(0);
     const [chatbotSuggested, setChatbotSuggested] = useState(false);
     const [predictionHistory, setPredictionHistory] = useState([]);
+    const [chatOpen, setChatOpen] = useState(false); // Chatbot toggle
+    const [chatMessages, setChatMessages] = useState([]); // Chat history
+    const [chatInput, setChatInput] = useState(""); // User input
+    const [isChatLoading, setIsChatLoading] = useState(false);
     const MAX_REFINEMENTS = 3;
     const MAX_HISTORY = 10;
 
@@ -193,6 +197,25 @@ const Dashboard = () => {
 
     const toggleDetails = () => setIsDetailsOpen(!isDetailsOpen);
 
+    const handleChatSubmit = async (e) => {
+        e.preventDefault();
+        if (!chatInput.trim()) return;
+        const userMessage = { text: chatInput, sender: "user" };
+        setChatMessages([...chatMessages, userMessage]);
+        setIsChatLoading(true); // Start loading
+        try {
+            const response = await chatWithBot({ message: chatInput });
+            const botMessage = { text: response.response, sender: "bot" };
+            setChatMessages((prev) => [...prev, botMessage]);
+        } catch (error) {
+            console.error("Chat error:", error);
+            setChatMessages((prev) => [...prev, { text: "Sorry, I couldn’t respond!", sender: "bot" }]);
+        }finally {
+            setIsChatLoading(false); // Stop loading
+            setChatInput("");
+        }
+    };
+
     return (
         <div>
             {user ? (
@@ -211,6 +234,10 @@ const Dashboard = () => {
                         <button onClick={handlePredict} className="predict-button">
                             Predict
                         </button>
+                        <br/>
+                        <div className="details-section">
+                                            <small><strong><p style={{color:"red"}}>Note: </p></strong></small><p><small>If symptoms are not present in list,use Chatbot.Its just a prediction.Please visit doctor if you have any emergency.</small></p>
+                        </div>
                         {error && <p className="error">{error}</p>}
                         {prediction && (
                             <div className="prediction-container">
@@ -244,6 +271,9 @@ const Dashboard = () => {
                                                     <li key={index}>{medicine}</li>
                                                 ))}
                                             </ul>
+                                        </div>
+                                        <div className="details-section">
+                                            <strong>Note: </strong><p><small>Its just a prediction.If you are not sure about the disease and symptoms. Please visit doctor.</small></p>
                                         </div>
                                     </div>
                                 ) : isDetailsOpen && (
@@ -281,6 +311,41 @@ const Dashboard = () => {
                                 <strong>Suggestion:</strong> Please use the chatbot for further assistance.
                             </p>
                         )}
+                        {/* Chatbot Widget */}
+                        <div className="chatbot-container">
+                            <button className="chatbot-toggle" onClick={() => setChatOpen(!chatOpen)}>
+                                {chatOpen ? "Close Chat" : "Chat with Us"}
+                            </button>
+                            {chatOpen && (
+                                <div className="chatbot-window">
+                                    <div className="chat-messages">
+                                        {chatMessages.length === 0 && (
+                                            <p>Hi! I’m here to help. Not sure about symptoms? Ask me anything!</p>
+                                        )}
+                                        {chatMessages.map((msg, index) => (
+                                            <div key={index} className={`chat-message ${msg.sender}`}>
+                                                <span>{msg.text}</span>
+                                            </div>
+                                        ))}
+                                        {isChatLoading && (
+                                            <div className="chat-message bot">
+                                                <span className="typing-animation">Typing<span>.</span><span>.</span><span>.</span></span>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <form onSubmit={handleChatSubmit} className="chat-input-form">
+                                        <input
+                                            type="text"
+                                            value={chatInput}
+                                            onChange={(e) => setChatInput(e.target.value)}
+                                            placeholder="Type your message..."
+                                            disabled={isChatLoading}
+                                        />
+                                        <button type="submit" disabled={isChatLoading}>Send</button>
+                                    </form>
+                                </div>
+                            )}
+                        </div>
                         {/* {predictionHistory.length > 0 && (
                             <div className="history-container">
                                 <h3>Prediction History (Last {MAX_HISTORY})</h3>

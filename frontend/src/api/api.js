@@ -77,3 +77,8 @@ export const getPredictionHistory = async (username) => {
         throw err.response?.data?.error || "Failed to fetch history";
     }
 };
+
+export const chatWithBot = async (data) => {
+    const response = await PredictionAPI.post("/chat", data);
+    return response.data;
+};

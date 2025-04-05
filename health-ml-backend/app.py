@@ -11,6 +11,7 @@ import os
 import time
 from pymongo import MongoClient
 import json
+import re
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}})
@@ -204,6 +205,43 @@ def get_details():
             "medicines": ["No treatment info available due to an error."]
         }), 500
     
+
+def get_chatbot_response(user_input):
+    prompt = (
+        f"You are a helpful medical chatbot. The user says: '{user_input}'. "
+        f"Respond conversationally, suggesting possible symptoms or actions based on this input. "
+        f"If the user is unsure, suggest common symptoms like itching, skin rash, or fever. "
+        f"Keep it simple, friendly, under 100 words, and avoid Markdown formatting (e.g., no * or **)."
+    )
+    try:
+        model = genai.GenerativeModel("gemini-2.0-flash")
+        response = model.generate_content(prompt)
+        raw_response = response.text.strip()
+        # Clean up Markdown artifacts
+        cleaned_response = re.sub(r'[*_]{1,2}', '', raw_response)  # Remove *, **, _, __
+        print(f"Raw response: {raw_response}")
+        print(f"Cleaned response: {cleaned_response}")
+        return cleaned_response
+    except Exception as e:
+        print(f"❌ Error in chatbot response: {str(e)}")
+        return "I’m here to help! Try asking about symptoms like itching or fever—do any apply to you?"
+# Existing endpoints unchanged: /api/get_symptoms, /api/predict, /api/details, /api/history, /auth/login, /auth/signup
+
+@app.route('/api/chat', methods=['POST'])
+def chat():
+    try:
+        data = request.get_json()
+        if not data or 'message' not in data:
+            return jsonify({"error": "Message is required"}), 400
+        user_input = data['message']
+        print(f"Chatbot received: {user_input}")
+        response = get_chatbot_response(user_input)
+        print(f"Chatbot response: {response}")
+        return jsonify({"response": response})
+    except Exception as e:
+        print(f"❌ Error in /chat: {str(e)}")
+        return jsonify({"response": "Sorry, I couldn’t process that! Try asking about symptoms."}), 500
+
 @app.route('/api/history', methods=['GET'])
 def get_history():
     try:
