@@ -1,9 +1,9 @@
 import axios from "axios";
 
-const PREDICTION_BASE_URL = "http://localhost:5001/api";
-const AUTH_BASE_URL = "http://localhost:5000/api";
+const PREDICTION_BASE_URL = "https://lifeline2-hnpm.onrender.com/api"; 
+const AUTH_BASE_URL = "https://lifeline2-hnpm.onrender.com/api";
 
-const PredictionAPI = axios.create({ baseURL: PREDICTION_BASE_URL });
+const PredictionAPI = axios.create({ baseURL: PREDICTION_BASE_URL }); 
 const AuthAPI = axios.create({ baseURL: AUTH_BASE_URL });
 
 export const login = async (credentials) => {
