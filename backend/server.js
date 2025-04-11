@@ -9,7 +9,7 @@ dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.json()); // Parse JSON requests
-app.use( cors() );
+app.use( cors({ origin: allowedOrigins, credentials: true }) );
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI, {
