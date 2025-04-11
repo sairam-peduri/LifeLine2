@@ -3,11 +3,13 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const axios=require("axios");
+const allowedOrigins = ["https://life-line2.vercel.app"];
 
 dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.json()); // Parse JSON requests
+app.use( cors() );
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI, {
