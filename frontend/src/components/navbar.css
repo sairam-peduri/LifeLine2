@@ -3,6 +3,12 @@
   z-index: 1050;
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
 }
+html {
+  scroll-padding-top: 6rem; /* helps with anchor scrolling */
+}
+.page-content {
+  padding-top: 6rem; /* or adjust if navbar height is different */
+}
 
 /* Styling for the navbar brand */
 .navbar-brand {

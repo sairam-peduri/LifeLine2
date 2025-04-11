@@ -1,48 +1,199 @@
-.profile-container {
-    max-width: 400px;
-    margin: 50px auto;
-    padding: 20px;
+body, html {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f9fbfd;
+    min-height: 100vh;
+    color: #2d3748;
+  }
+  
+  .profile-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 6rem 1rem 2rem; /* Push below fixed navbar */
+  }
+  
+  .profile-card {
     background: #ffffff;
     border-radius: 12px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    font-family: "Poppins", sans-serif;
-}
-
-.profile-container h2 {
-    color: #333;
-    font-size: 24px;
-    margin-bottom: 15px;
-    border-bottom: 2px solid #4caf50;
-    padding-bottom: 8px;
-    display: inline-block;
-}
-
-.profile-container p {
-    font-size: 18px;
-    color: #555;
-    margin: 10px 0;
-}
-
-.profile-container strong {
-    color: #222;
-    font-weight: 600;
-}
-
-button {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+    padding: 2rem 3rem;
     width: 100%;
-    padding: 10px;
-    margin-top: 15px;
-    border: none;
-    border-radius: 8px;
-    font-size: 16px;
+    max-width: 900px;
+    margin-bottom: 2rem;
+  }
+  
+  .profile-sidebar {
+    flex: 1 1 250px;
+    text-align: center;
+  }
+  
+  .profile-sidebar img {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 1rem;
+  }
+  
+  .profile-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+  }
+  
+  .profile-role {
+    color: #718096;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+  }
+  
+  .profile-info {
+    flex: 2 1 400px;
+    display: grid;
+    grid-template-columns: 150px 1fr;
+    row-gap: 1rem;
+    column-gap: 1rem;
+    align-items: center;
+    font-size: 1rem;
+  }
+  
+  .profile-info p {
+    margin: 0;
+  }
+  
+  .profile-info strong {
+    justify-self: end;
+    color: #2b6cb0;
     font-weight: 600;
-    cursor: pointer;
-    background: #ff4b5c;
+  }
+  
+  .logout-btn {
+    background-color: #e53e3e;
     color: white;
-    transition: all 0.3s ease-in-out;
-}
-
-button:hover {
-    background: #d43f50;
-}
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    grid-column: 2;
+    justify-self: start;
+  }
+  
+  .logout-btn:hover {
+    background-color: #c53030;
+  }
+  
+  /* 🔄 Recent Predictions - Flex Layout */
+  .recent-predictions {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .prediction-box {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    padding: 1rem 1.5rem;
+    flex: 1 1 250px;
+    max-width: 300px;
+    min-width: 220px;
+    transition: transform 0.2s ease;
+  }
+  
+  .prediction-box:hover {
+    transform: translateY(-5px);
+  }
+  
+  .prediction-box p {
+    margin: 0.5rem 0;
+  }
+  
+  .prediction-box strong {
+    color: #2b6cb0;
+  }
+  .profile-card {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+    padding: 2rem 3rem;
+    width: 100%;
+    max-width: 900px;
+    margin-bottom: 2rem;
+  }
+  
+  .profile-sidebar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    min-width: 200px;
+  }
+  
+  .profile-sidebar img {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 1rem;
+  }
+  
+  .profile-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-top: 0.5rem;
+  }
+  
+  .profile-role {
+    color: #718096;
+    font-size: 0.9rem;
+  }
+  
+  .profile-info {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 130px 1fr;
+    row-gap: 1rem;
+    column-gap: 1rem;
+    align-items: center;
+    justify-content: center;
+    max-width: 500px;
+    margin: auto;
+  }
+  
+  .profile-info strong {
+    justify-self: end;
+    color: #2b6cb0;
+    font-weight: 600;
+  }
+  
+  .profile-info p {
+    margin: 0;
+  }
+  
+  .logout-btn {
+    background-color: #e53e3e;
+    color: white;
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    grid-column: 2;
+    justify-self: start;
+    margin-top: 1rem;
+  }
+  
+  .logout-btn:hover {
+    background-color: #c53030;
+  }
+  

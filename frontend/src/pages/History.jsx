@@ -33,20 +33,23 @@ const History = () => {
     };
 
     return (
-        <div>
+        <div className="history-wrapper">
             {user ? (
                 <>
                     <Navbar user={user} />
-                    <h2>Prediction History for {user.name}</h2>
                     <div className="history-container">
+                        <h2 className="history-header">Prediction History</h2>
                         {error && <p className="error">{error}</p>}
                         {history.length > 0 ? (
                             <>
-                                <h3>Your Last 10 Predictions</h3>
-                                <ul>
+                                <ul className="history-list">
                                     {history.map((entry, index) => (
-                                        <li key={index}>
-                                            <strong>{entry.disease}</strong> - Symptoms: {entry.symptoms.join(", ")} (Predicted on: {new Date(entry.timestamp).toLocaleString()})
+                                        <li key={index} className="history-item">
+                                            <strong>{entry.disease}</strong><br />
+                                            Symptoms: {entry.symptoms.join(", ")}<br />
+                                            {/* <span className="timestamp">
+                                                Predicted on: {new Date(entry.timestamp).toLocaleString()}
+                                            </span> */}
                                         </li>
                                     ))}
                                 </ul>

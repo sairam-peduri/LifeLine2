@@ -287,10 +287,11 @@ const Dashboard = () => {
                             <div className="refinement-container">
                                 <h3>Possible Diseases:</h3>
                                 <ul>
-                                    {possibleDiseases.map((disease, index) => (
+                                    {possibleDiseases.slice(0, 6).map((disease, index) => (
                                         <li key={index}>{disease}</li>
                                     ))}
                                 </ul>
+
                                 {refinedSymptoms.length > 0 && (
                                     <p><strong>Confirmed Symptoms:</strong> {refinedSymptoms.join(", ")}</p>
                                 )}
