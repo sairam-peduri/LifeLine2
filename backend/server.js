@@ -22,9 +22,11 @@ app.get("/", (req, res) => {
     res.send("API is running...");
 });
 
+FLASK_API_URL = "https://lifeline2-1.onrender.com/api";
+
 app.get("/api/get_symptoms", async (req, res) => {
     try {
-        const flaskResponse = await axios.get("http://127.0.0.1:5001/api/get_symptoms");
+        const flaskResponse = await axios.get("${FLASK_API_URL}/get_symptoms");
         res.json(flaskResponse.data);
     } catch (error) {
         console.error("❌ Error fetching symptoms from Flask:", error);
@@ -42,7 +44,7 @@ app.post("/api/predict", async (req, res) => {
     }
 
     // Send request to Flask API
-    const flaskResponse = await axios.post("http://127.0.0.1:5001/api/predict", { symptoms });
+    const flaskResponse = await axios.post("${FLASK_API_URL}/predict", { symptoms });
 
     // Send prediction response to frontend
     res.json(flaskResponse.data);
