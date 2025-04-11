@@ -13,7 +13,7 @@ import {
 } from "recharts";
 import { getPredictionHistory } from "../api/api";
 import Navbar from "../components/Navbar";
-import "./Profile.css";
+import "./Profile1.css";
 
 const COLORS = ["#3182ce", "#63b3ed", "#90cdf4", "#a0aec0", "#68d391", "#f6ad55", "#fc8181", "#ed64a6", "#d53f8c"];
 
