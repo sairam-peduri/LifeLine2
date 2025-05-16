@@ -14,6 +14,7 @@ fastapi==0.110.0
 filelock==3.13.3
 flask==3.0.2
 fonttools==4.51.0
+gunicorn==20.1.0
 google-api-core==2.18.0
 google-api-python-client==2.126.0
 google-auth==2.29.0
