@@ -50,9 +50,7 @@ platformdirs==4.3.7
 prompt-toolkit==3.0.50
 proto-plus==1.26.1
 psutil==7.0.0
-pure\_eval==0.2.3
 pyasn1==0.6.1
-pyasn1\_modules==0.4.2
 pydantic==2.11.1
 pydantic-core==2.33.0
 Pygments==2.19.1
@@ -64,7 +62,6 @@ pytz==2025.1
 scipy==1.11.3
 scikit-learn==1.5.1
 six>=1.5
-stack\_data==0.6.3
 tornado==6.5
 tzdata>=2022.7
 wcwidth==0.2.13
