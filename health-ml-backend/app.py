@@ -13,10 +13,9 @@ from pymongo import MongoClient
 import json
 import re
 
+frontend_origin = os.getenv("FRONTEND_ORIGIN", "http://localhost:5173")
+CORS(app, resources={r"/*": {"origins": frontend_origin}})
 
-const allowedOrigins = ["https://life-line2.vercel.app"];
-app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": ["http://localhost:5173", "https://life-line2.vercel.app"]}})
 
 
 # Load environment variables
