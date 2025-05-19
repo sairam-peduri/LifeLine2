@@ -13,7 +13,7 @@ from pymongo import MongoClient
 import json
 import re
 
-frontend_origin = os.getenv("FRONTEND_ORIGIN", "http://localhost:5173")
+frontend_origin = os.getenv("FRONTEND_ORIGIN")
 CORS(app, resources={r"/*": {"origins": frontend_origin}})
 
 
