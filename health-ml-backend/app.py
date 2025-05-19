@@ -13,6 +13,8 @@ from pymongo import MongoClient
 import json
 import re
 
+app = Flask(__name__)
+
 frontend_origin = os.getenv("FRONTEND_ORIGIN")
 CORS(app, resources={r"/*": {"origins": frontend_origin}})
 
