@@ -93,6 +93,14 @@ def get_gemini_disease_details(disease_name, symptoms):
             "precautions": ["Keep affected areas clean to avoid worsening.", "Monitor symptoms for changes."],
             "medicines": ["Use over-the-counter remedies suitable for {disease_name}.", "Ask a pharmacist for advice."]
         }
+        
+        
+@app.route('/', methods=['GET'])
+def home():
+    return "Lifeline API is live!"
+
+
+
 
 @app.route('/api/get_symptoms', methods=['GET'])
 def get_symptoms():
