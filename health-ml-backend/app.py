@@ -99,7 +99,7 @@ def home():
 
 
 
-@app.route('/api/get_symptoms', methods=['GET','OPTIONS'])
+@app.route('/api/get_symptoms', methods=['GET'])
 def get_symptoms():
     try:
         if not valid_symptoms:
