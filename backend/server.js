@@ -7,9 +7,11 @@ const allowedOrigins = ["https://life-line2.vercel.app"];
 
 dotenv.config();
 const app = express();
-app.use(cors());
-app.use(express.json()); // Parse JSON requests
+
 app.use( cors({ origin: allowedOrigins, credentials: true }) );
+
+
+app.use(express.json()); // Parse JSON requests
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI, {
