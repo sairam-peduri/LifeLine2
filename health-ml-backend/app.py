@@ -14,7 +14,10 @@ import json
 import re
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "https://life-line2.vercel.app"}}, supports_credentials=True)
+
+# Set this explicitly to match your Vercel frontend domain
+CORS(app, resources={r"/api/*": {"origins": "https://life-line2.vercel.app"}}, supports_credentials=True)
+
 
 
 # Load environment variables
