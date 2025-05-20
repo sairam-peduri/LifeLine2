@@ -10,6 +10,19 @@ const app = express();
 
 app.use( cors({ origin: allowedOrigins, credentials: true }) );
 
+// ✅ Middleware: Custom headers to support preflight and cookies
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "https://life-line2.vercel.app");
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
+
+// ✅ Middleware: Allow preflight requests
+app.options("*", cors({
+  origin: allowedOrigins,
+  credentials: true,
+}));
 
 app.use(express.json()); // Parse JSON requests
 
@@ -28,7 +41,7 @@ FLASK_API_URL = "https://lifeline2-1.onrender.com/api";
 
 app.get("/api/get_symptoms", async (req, res) => {
     try {
-        const flaskResponse = await axios.get("${FLASK_API_URL}/get_symptoms");
+        const flaskResponse = await axios.get(`${FLASK_API_URL}/get_symptoms`);
         res.json(flaskResponse.data);
     } catch (error) {
         console.error("❌ Error fetching symptoms from Flask:", error);
@@ -46,7 +59,7 @@ app.post("/api/predict", async (req, res) => {
     }
 
     // Send request to Flask API
-    const flaskResponse = await axios.post("${FLASK_API_URL}/predict", { symptoms });
+    const flaskResponse = await axios.post(`${FLASK_API_URL}/predict`, { symptoms });
 
     // Send prediction response to frontend
     res.json(flaskResponse.data);
