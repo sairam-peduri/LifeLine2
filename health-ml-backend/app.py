@@ -14,7 +14,8 @@ import json
 import re
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "https://life-line2.vercel.app"}})
+CORS(app, resources={r"/*": {"origins": "https://life-line2.vercel.app"}}, supports_credentials=True)
+
 
 # Load environment variables
 load_dotenv()
